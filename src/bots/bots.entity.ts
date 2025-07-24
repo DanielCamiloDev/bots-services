@@ -26,8 +26,8 @@ export class Bot {
   @Column({ length: 20 })
   language: string; // Español, Inglés, etc.
 
-  @Column({ type: 'uuid', nullable: true })
-  segmentationId?: string; // FK a la segmentación (Azure WI 1732)
+  @Column({ type: 'varchar', length: 300, nullable: true })
+  segmentation?: string; 
 
   @Column({
     type: 'enum',

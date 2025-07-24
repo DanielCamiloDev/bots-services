@@ -8,7 +8,7 @@ import {
   
   export enum UserRole {
     ADMIN = 'admin',
-    EDITOR = 'editor',
+    SADMIN = 'superadmin',
     VIEWER = 'viewer',
   }
   

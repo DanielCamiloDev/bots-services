@@ -11,6 +11,7 @@ import {
   export enum BotAuditAction {
     CREATE = 'create',
     UPDATE = 'update',
+    REMOVE = 'remove',
   }
   
   @Entity({ name: 'bot_audit_log' })

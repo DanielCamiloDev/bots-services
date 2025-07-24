@@ -29,9 +29,9 @@ export class CreateBotDto {
   @IsNotEmpty({ message: 'El campo language es requerido' })
   language: string;
 
-  @IsUUID()
-  @IsNotEmpty({ message: 'El campo segmentationId es requerido' })
-  segmentationId?: string;
+  @IsString()
+  @IsNotEmpty({ message: 'El campo segmentation es requerido' })
+  segmentation?: string;
 
   @IsEnum(BotStatus)
   @IsNotEmpty({ message: 'El campo status es requerido' })
