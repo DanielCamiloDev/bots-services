@@ -8,6 +8,8 @@ import {
   Delete,
   UseGuards,
   Req,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { BotsService } from './bots.service';
 import { CreateBotDto } from './dto/create-bot.dto';
@@ -16,6 +18,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { CreateBotRequestDto } from './dto/create-bot-request.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('bots')
@@ -57,8 +60,13 @@ export class BotsController {
   }
   @Post()
   @Roles('bot-trainer::super-admin', 'bot-trainer::admin')
-  create(@Body() body: CreateBotDto, @Req() req) {
-    return this.botsService.create(body, req.userName);
+  @UseInterceptors(FileInterceptor('image'))
+  create(
+    @Body() body: CreateBotDto,
+    @UploadedFile() image: any,
+    @Req() req
+  ) {
+    return this.botsService.create(body, req.userName, image);
   }
 
   @Put(':id')

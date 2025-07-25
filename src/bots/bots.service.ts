@@ -7,6 +7,8 @@ import { CreateBotDto } from './dto/create-bot.dto';
 import { UpdateBotDto } from './dto/update-bot.dto';
 import { BotAuditAction, BotAuditLog } from './bot-audit.entity';
 import {UserContextDto} from './dto/user-context.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class BotsService {
@@ -35,23 +37,42 @@ export class BotsService {
     }
     return bots;
   }
-  async create(dto: CreateBotDto, user ) {
+  async create(dto: CreateBotDto, user, image?: any) {
     // 1. Verificar existencia por nombre
     const exists = await this.repo.findOne({ where: { name: dto.name, segmentation: dto.segmentation } });
     if (exists) {
-      // 2. Si ya existe, lanzar error 409 Conflict
       throw new ConflictException(`El nombre "${dto.name}" ya existe para la segmentación "${dto.segmentation}".`);
     }
+
+    // Guardar imagen si existe
+    let avatarUrl: string | undefined = undefined;
+    if (image) {
+      const uploadDir = path.join(__dirname, '../../uploads/bots');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      const fileName = `${Date.now()}_${image.originalname}`;
+      avatarUrl = path.join('uploads/bots', fileName);
+      fs.writeFileSync(path.join(uploadDir, fileName), image.buffer);
+    }
+
+    // Convertir closingKeywords a string si es array
+    const closingKeywords = Array.isArray(dto.closingKeywords)
+      ? dto.closingKeywords.join(',')
+      : dto.closingKeywords;
+
     // 3. Si no existe, crear y guardar
-    const bot = this.repo.create(dto);
-    // 2. Guardar el bot en la base de datos y obtener el ID
+    const bot = this.repo.create({
+      ...dto,
+      closingKeywords,
+      avatarUrl, // Guardar la ruta en el campo correcto
+    });
     const savedBot = await this.repo.save(bot);
 
-    // 3. Guardar el registro de auditoría
     await this.auditRepo.save({
       bot: savedBot,
       bot_id: savedBot.id,
-      user: user, // el usuario que hizo la acción
+      user: user,
       action: BotAuditAction.CREATE,
       details: { ...dto },
     });
