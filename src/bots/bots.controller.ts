@@ -55,7 +55,7 @@ export class BotsController {
    * Devuelve todos los bots de la segmentación indicada (solo para super-admin).
    */
   @Get('segment/:segmentationId')
-  @Roles('bot-trainer::super-admin')
+  @Roles('bot-trainer::admin')
   async findAllBySegmentation(
     @Param('segmentationId') segmentationId: number) {
     return this.botsService.findAllSegmentation(segmentationId);
