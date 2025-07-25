@@ -18,7 +18,11 @@ async function bootstrap() {
     forbidNonWhitelisted: true,   // rechaza payloads con props no en el DTO
     transform: true,              // convierte tipos (e.g. strings → numbers)
   }));
-
+  app.enableCors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
   const dataSource = app.get(DataSource);
   const userRepo = dataSource.getRepository(User);
 
