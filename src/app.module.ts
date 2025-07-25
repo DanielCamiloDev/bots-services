@@ -4,16 +4,13 @@ import { BotsService } from './bots/bots.service';
 import { BotsController } from './bots/bots.controller';
 import { Bot } from './bots/bots.entity';
 import { BotAuditLog } from './bots/bot-audit.entity';
-import { AuthModule } from './auth/auth.module';
 import 'dotenv/config'
-import { join } from 'path';
 import { AppDataSourceOptions } from './data-source'; // tu configuración de TypeORM
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(AppDataSourceOptions),
     TypeOrmModule.forFeature([Bot, BotAuditLog]),
-    AuthModule,
   ],
   providers: [BotsService],
   controllers: [BotsController],

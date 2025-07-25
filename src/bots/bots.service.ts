@@ -5,7 +5,6 @@ import { Repository } from 'typeorm';
 import { Bot } from './bots.entity';
 import { CreateBotDto } from './dto/create-bot.dto';
 import { UpdateBotDto } from './dto/update-bot.dto';
-import { AuthService } from 'src/auth/auth.service';
 import { BotAuditAction, BotAuditLog } from './bot-audit.entity';
 import {UserContextDto} from './dto/user-context.dto';
 
@@ -15,7 +14,6 @@ export class BotsService {
     @InjectRepository(Bot)
     private readonly repo: Repository<Bot>,
     @InjectRepository(BotAuditLog) private readonly auditRepo: Repository<BotAuditLog>,
-    private readonly authService: AuthService, 
   ) {}
 
   findAll() {
@@ -37,7 +35,7 @@ export class BotsService {
     }
     return bots;
   }
-  async create(dto: CreateBotDto, user: UserContextDto ) {
+  async create(dto: CreateBotDto, user ) {
     // 1. Verificar existencia por nombre
     const exists = await this.repo.findOne({ where: { name: dto.name, segmentation: dto.segmentation } });
     if (exists) {
@@ -53,7 +51,7 @@ export class BotsService {
     await this.auditRepo.save({
       bot: savedBot,
       bot_id: savedBot.id,
-      user: user.name, // el usuario que hizo la acción
+      user: user, // el usuario que hizo la acción
       action: BotAuditAction.CREATE,
       details: { ...dto },
     });
@@ -61,13 +59,13 @@ export class BotsService {
     return savedBot;
   }
 
-  async update(id: string, dto: CreateBotDto, user: UserContextDto) {
+  async update(id: string, dto: UpdateBotDto, user) {
     await this.repo.update(id, dto).then(() => this.findOne(id));
     const bot = await this.findOne(id);
     await this.auditRepo.save({
       bot,
       bot_id: bot.id,
-      user: user.name,
+      user: user,
       action: BotAuditAction.UPDATE,
       details: { ...dto },
     });

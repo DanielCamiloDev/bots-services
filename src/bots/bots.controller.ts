@@ -7,6 +7,7 @@ import {
   Put,
   Delete,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { BotsService } from './bots.service';
 import { CreateBotDto } from './dto/create-bot.dto';
@@ -22,41 +23,55 @@ export class BotsController {
   constructor(private readonly botsService: BotsService) {}
 
   @Get()
+  @Roles('bot-trainer::super-admin')
   findAll() {
     return this.botsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.botsService.findOne(id);
+  @Get('solo-bot-trainer')
+  @Roles('bot-trainer::super-admin')
+  ejemploSoloBotTrainer(@Req() req) {
+    return {
+      mensaje: '¡Acceso permitido solo para bot-trainer::super-admin!',
+      usuario: req.userName,
+      roles: req.roles
+    };
   }
+
+
 
   /**
    * GET /bots/segment/:segmentationId
    * Devuelve todos los bots de la segmentación indicada.
    */
   @Get('segment/:segmentationId')
-  @Roles('admin', 'superadmin')
+  @Roles('bot-trainer::super-admin')
   async findAllBySegmentation(
     @Param('segmentationId') segmentationId: string) {
     return this.botsService.findAllSegmentation(segmentationId);
   }
-
+  @Get(':id')
+  @Roles('bot-trainer::admin')
+  findOne(@Param('id') id: string) {
+    return this.botsService.findOne(id);
+  }
   @Post()
-  @Roles('admin')
-  create(@Body() body: CreateBotRequestDto) {
-    return this.botsService.create(body.data, body.user);
+  @Roles('bot-trainer::super-admin', 'bot-trainer::admin')
+  create(@Body() body: CreateBotDto, @Req() req) {
+    return this.botsService.create(body, req.userName);
   }
 
   @Put(':id')
-  @Roles('admin', 'editor')
-  update(@Param('id') id: string, @Body() body: CreateBotRequestDto) {
-    return this.botsService.update(id, body.data, body.user);
+  @Roles('bot-trainer::super-admin', 'bot-trainer::admin')
+  update(@Param('id') id: string, @Body() payload: UpdateBotDto, @Req() req) {
+    return this.botsService.update(id, payload, req.userName);
   }
 
   @Delete(':id')
-  @Roles('admin', 'editor')
+  @Roles('bot-trainer::super-admin')
   remove(@Param('id') id: string) {
     return this.botsService.remove(id);
   }
+
+
 }

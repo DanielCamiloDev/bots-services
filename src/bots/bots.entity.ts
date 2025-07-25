@@ -46,7 +46,7 @@ export class Bot {
   idleTimeout: number; // Minutos de inactividad
 
   @Column('simple-array', { nullable: true })
-  closingKeywords?: string[]; // Palabras clave separadas por coma
+  closingKeywords?: string; // Palabras clave separadas por coma
 
   @Column('text', { nullable: true })
   defaultNotFoundMessage?: string; // Mensaje cuando no hay contenido

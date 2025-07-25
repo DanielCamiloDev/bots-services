@@ -55,7 +55,7 @@ export class CreateBotDto {
   @ArrayNotEmpty()
   @IsString({ each: true })
   @IsNotEmpty({ message: 'El campo closingKeywords es requerido' })
-  closingKeywords?: string[];
+  closingKeywords?: string;
 
   @IsString()
   @IsNotEmpty({ message: 'El campo defaultNotFoundMessage es requerido' })
