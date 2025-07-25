@@ -10,6 +10,7 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsNotEmpty,
+  IsObject,
 } from 'class-validator';
 import { BotStatus } from '../bots.entity';
 import { Type } from 'class-transformer';
@@ -31,6 +32,8 @@ export class CreateBotDto {
   @IsNotEmpty({ message: 'El campo language es requerido' })
   language: string;
 
+  @IsNotEmpty({ message: 'El campo segmentation es requerido' })
+  @IsObject({ message: 'El campo segmentation debe ser un objeto JSON' })
   @Type(() => SegmentationDto)
   @IsNotEmpty({ message: 'El campo segmentation es requerido' })
   segmentation: SegmentationDto;

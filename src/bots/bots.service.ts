@@ -1,6 +1,6 @@
-import { Injectable, ConflictException, NotFoundException} from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 
 import { Bot } from './bots.entity';
 import { CreateBotDto } from './dto/create-bot.dto';
@@ -27,14 +27,25 @@ export class BotsService {
   findAll() {
     return this.repo.find();
   }
-  findOne(id: string) {
-    return this.repo.findOneOrFail({ where: { id } });
+  async findOne(id: string) {
+    const bot = await this.repo.findOne({ where: { id } });
+    if (!bot) {
+      throw new NotFoundException(`No existe ningún bot con id=${id}`);
+    }
+    return bot;
+
   }
   /**
    * Devuelve todos los bots de una segmentación dada.
    * @param segmentation id de la segmentación
    */
   async findAllSegmentation(segmentation: number): Promise<Bot[]> {
+    if (segmentation == null || isNaN(segmentation)) {
+      throw new BadRequestException('El parámetro de grupo es inválido o faltante');
+    }
+
+    
+    try {
     const bots = await this.repo
       .createQueryBuilder('bot')
       .where("JSON_EXTRACT(bot.segmentation, '$.group') = :group", {
@@ -48,6 +59,17 @@ export class BotsService {
       );
     }
     return bots;
+  } catch (err) {
+    // 4️⃣ Capturar errores de JSON_EXTRACT / QueryFailedError
+    if (err instanceof QueryFailedError) {
+      // Podrías inspeccionar err.driverError.code o message si quieres más detalle
+      throw new BadRequestException(
+        'Error al procesar la segmentación: asegúrate de que sea un JSON válido.',
+      );
+    }
+    // Re-lanzar otros errores
+    throw err;
+  }
   }
 
 
