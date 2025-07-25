@@ -51,9 +51,7 @@ export class CreateBotDto {
   @IsOptional()
   idleTimeout?: number = 0;
 
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsString({ each: true })
+  @IsString()
   @IsNotEmpty({ message: 'El campo closingKeywords es requerido' })
   closingKeywords?: string;
 
