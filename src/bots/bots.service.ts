@@ -30,7 +30,7 @@ export class BotsService {
   }
   /**
    * Devuelve todos los bots de una segmentación dada.
-   * @param segmentation UUID de la segmentación
+   * @param segmentation id de la segmentación
    */
   async findAllSegmentation(segmentation: string): Promise<Bot[]> {
     const bots = await this.repo.find({ where: { segmentation } });
@@ -53,6 +53,7 @@ export class BotsService {
     // Guardar imagen si existe
     let avatarUrl: string | undefined = undefined;
     if (image) {
+      this.logger.log('Se recibio imagen'); // nivel info
       const uploadDir = path.join(__dirname, '../../uploads/bots');
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });

@@ -12,6 +12,7 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 import { BotStatus } from '../bots.entity';
+import { Type } from 'class-transformer';
 
 export class CreateBotDto {
   @IsString()
@@ -46,9 +47,11 @@ export class CreateBotDto {
   @IsOptional()
   avatarUrl?: string;
 
+  
+  @IsOptional()
+  @Type(() => Number) 
   @IsInt()
   @Min(0)
-  @IsOptional()
   idleTimeout?: number = 0;
 
   @IsString()
