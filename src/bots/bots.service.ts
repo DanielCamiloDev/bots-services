@@ -37,7 +37,7 @@ export class BotsService {
     }
     return bots;
   }
-  async create(dto: CreateBotDto, user, image?: any) {
+  async create(dto: CreateBotDto, user:string, image?: any) {
     // 1. Verificar existencia por nombre
     const exists = await this.repo.findOne({ where: { name: dto.name, segmentation: dto.segmentation } });
     if (exists) {
@@ -80,7 +80,7 @@ export class BotsService {
     return savedBot;
   }
 
-  async update(id: string, dto: UpdateBotDto, user) {
+  async update(id: string, dto: UpdateBotDto, user:string) {
     await this.repo.update(id, dto).then(() => this.findOne(id));
     const bot = await this.findOne(id);
     await this.auditRepo.save({
@@ -92,13 +92,13 @@ export class BotsService {
     });
     return bot;
   }
-  async remove(id: string) {
+  async remove(id: string, user:string) {
     const bot = await this.findOne(id);
     await this.repo.delete(id);
     await this.auditRepo.save({
       bot,
       bot_id: bot.id,
-      user: "usa",
+      user: user,
       action: BotAuditAction.REMOVE,
       details: { info: "bot removed" }, // o details: null
     });

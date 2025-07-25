@@ -31,6 +31,7 @@ export class BotsController {
     return this.botsService.findAll();
   }
 
+/** 
   @Get('solo-bot-trainer')
   @Roles('bot-trainer::super-admin')
   ejemploSoloBotTrainer(@Req() req) {
@@ -40,7 +41,7 @@ export class BotsController {
       roles: req.roles
     };
   }
-
+*/
 
 
   /**
@@ -77,8 +78,8 @@ export class BotsController {
 
   @Delete(':id')
   @Roles('bot-trainer::super-admin')
-  remove(@Param('id') id: string) {
-    return this.botsService.remove(id);
+  remove(@Param('id') id: string,@Req() req) {
+    return this.botsService.remove(id, req.userName);
   }
 
 
