@@ -8,9 +8,15 @@ import 'dotenv/config'
 import { AppDataSourceOptions } from './data-source'; // tu configuración de TypeORM
 import { WinstonModule } from 'nest-winston';
 import { winstonConfig } from './logguer/winston-config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
     WinstonModule.forRoot(winstonConfig),
     TypeOrmModule.forRoot(AppDataSourceOptions),
     TypeOrmModule.forFeature([Bot, BotAuditLog]),
