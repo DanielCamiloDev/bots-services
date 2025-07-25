@@ -147,6 +147,10 @@ export class BotsService {
     if (dto.segmentation) {
       updatePayload.segmentation = dto.segmentation; // ← sin serializar
     }
+    this.logger.log('Creando un bot...');
+    this.logger.log(updatePayload);
+
+
     await this.repo.update(id, updatePayload);
     const bot = await this.findOne(id);
     await this.auditRepo.save({
