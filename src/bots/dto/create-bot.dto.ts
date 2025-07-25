@@ -11,9 +11,11 @@ import {
   IsArray,
   IsNotEmpty,
   IsObject,
+  ValidateNested,
+  IsJSON,
 } from 'class-validator';
 import { BotStatus } from '../bots.entity';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { SegmentationDto } from './segmentation.dto';
 
 export class CreateBotDto {
@@ -32,11 +34,10 @@ export class CreateBotDto {
   @IsNotEmpty({ message: 'El campo language es requerido' })
   language: string;
 
+  
   @IsNotEmpty({ message: 'El campo segmentation es requerido' })
-  @IsObject({ message: 'El campo segmentation debe ser un objeto JSON' })
-  @Type(() => SegmentationDto)
-  @IsNotEmpty({ message: 'El campo segmentation es requerido' })
-  segmentation: SegmentationDto;
+  @IsJSON({ message: 'El campo segmentation debe ser un JSON válido' })
+  segmentation: string;
 
   @IsEnum(BotStatus)
   @IsNotEmpty({ message: 'El campo status es requerido' })

@@ -74,58 +74,73 @@ export class BotsService {
 
 
 
-  async create(dto: CreateBotDto, user:string, rrhh:number, image?: any) {
-    this.logger.log('Creando un bot...'); // nivel info
-
-    // 1. Verificar existencia por nombre
-    const exists = await this.repo
-    .createQueryBuilder('bot')
-    .where('bot.name = :name', { name: dto.name })
-    .andWhere("JSON_EXTRACT(bot.segmentation, '$.group') = :group", {
-      group: dto.segmentation.group,
-    })
-    .getOne();
-    if (exists) {
-      throw new ConflictException(`El nombre "${dto.name}" ya existe para la segmentación "${dto.segmentation}".`);
+  async create(
+    dto: CreateBotDto,
+    user: string,
+    rrhh: number,
+    image?: any,
+  ): Promise<Bot> {
+    this.logger.log('Creando un bot...');
+  
+    // 0️⃣ Parseamos segmentation JSON
+    let segmentationObj: SegmentationDto;
+    try {
+      segmentationObj = JSON.parse(dto.segmentation);
+    } catch {
+      throw new BadRequestException('segmentation no es JSON válido');
     }
-
-    // Guardar imagen si existe
-    let avatarUrl: string | undefined = undefined;
+  
+    // 1️⃣ Verificar existencia por nombre + grupo
+    const exists = await this.repo
+      .createQueryBuilder('bot')
+      .where('bot.name = :name', { name: dto.name })
+      .andWhere("JSON_EXTRACT(bot.segmentation, '$.group') = :group", {
+        group: segmentationObj.group,     // <-- usar el objeto parseado
+      })
+      .getOne();
+  
+    if (exists) {
+      throw new ConflictException(
+        `El nombre "${dto.name}" ya existe para la segmentación del grupo "${segmentationObj.group}".`,
+      );
+    }
+  
+    // 2️⃣ Guardar imagen si existe
+    let avatarUrl: string | undefined;
     if (image) {
-      this.logger.log('Se recibio imagen'); // nivel info
       const uploadDir = path.join(__dirname, '../../uploads/bots');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
       const fileName = `${Date.now()}_${image.originalname}`;
       avatarUrl = path.join('uploads/bots', fileName);
       fs.writeFileSync(path.join(uploadDir, fileName), image.buffer);
     }
-
-    // Convertir closingKeywords a string si es array
+  
+    // 3️⃣ Convertir closingKeywords a string
     const closingKeywords = Array.isArray(dto.closingKeywords)
       ? dto.closingKeywords.join(',')
       : dto.closingKeywords;
-
-    // 3. Si no existe, crear y guardar
+  
+    // 4️⃣ Crear y guardar el bot, pasando segmentationObj en vez de dto.segmentation
     const bot = this.repo.create({
       ...dto,
+      segmentation: segmentationObj,  // <-- objeto, no string
       closingKeywords,
-      avatarUrl, // Guardar la ruta en el campo correcto
-      segmentation: dto.segmentation, // ← sin serializar
+      avatarUrl,
     });
     const savedBot = await this.repo.save(bot);
-
+  
+    // 5️⃣ Registrar auditoría
     await this.auditRepo.save({
       bot: savedBot,
       bot_id: savedBot.id,
-      user: JSON.stringify({user, rrhh}),
+      user: JSON.stringify({ user, rrhh }),
       action: BotAuditAction.CREATE,
       details: { ...dto },
     });
-
+  
     return savedBot;
   }
+  
 
   async update(id: string, dto: UpdateBotDto, user:string, rrhh:number) {
     const updatePayload: any = { ...dto };
