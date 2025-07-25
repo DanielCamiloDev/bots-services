@@ -9,13 +9,17 @@ import { BotAuditAction, BotAuditLog } from './bot-audit.entity';
 import {UserContextDto} from './dto/user-context.dto';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class BotsService {
+  private readonly logger = new Logger(BotsService.name);
+
   constructor(
     @InjectRepository(Bot)
     private readonly repo: Repository<Bot>,
     @InjectRepository(BotAuditLog) private readonly auditRepo: Repository<BotAuditLog>,
+
   ) {}
 
   findAll() {
@@ -38,6 +42,8 @@ export class BotsService {
     return bots;
   }
   async create(dto: CreateBotDto, user:string, image?: any) {
+    this.logger.log('Creando un bot...'); // nivel info
+
     // 1. Verificar existencia por nombre
     const exists = await this.repo.findOne({ where: { name: dto.name, segmentation: dto.segmentation } });
     if (exists) {

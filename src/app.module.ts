@@ -6,9 +6,12 @@ import { Bot } from './bots/bots.entity';
 import { BotAuditLog } from './bots/bot-audit.entity';
 import 'dotenv/config'
 import { AppDataSourceOptions } from './data-source'; // tu configuración de TypeORM
+import { WinstonModule } from 'nest-winston';
+import { winstonConfig } from './logguer/winston-config';
 
 @Module({
   imports: [
+    WinstonModule.forRoot(winstonConfig),
     TypeOrmModule.forRoot(AppDataSourceOptions),
     TypeOrmModule.forFeature([Bot, BotAuditLog]),
   ],
