@@ -13,6 +13,7 @@ import {
 } from 'class-validator';
 import { BotStatus } from '../bots.entity';
 import { Type } from 'class-transformer';
+import { SegmentationDto } from './segmentation.dto';
 
 export class CreateBotDto {
   @IsString()
@@ -30,9 +31,9 @@ export class CreateBotDto {
   @IsNotEmpty({ message: 'El campo language es requerido' })
   language: string;
 
-  @IsString()
+  @Type(() => SegmentationDto)
   @IsNotEmpty({ message: 'El campo segmentation es requerido' })
-  segmentation?: string;
+  segmentation: SegmentationDto;
 
   @IsEnum(BotStatus)
   @IsNotEmpty({ message: 'El campo status es requerido' })

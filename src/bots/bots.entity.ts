@@ -6,6 +6,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { SegmentationDto } from './dto/segmentation.dto';
 
 export enum BotStatus {
   ACTIVE = 'activo',
@@ -26,8 +27,9 @@ export class Bot {
   @Column({ length: 20 })
   language: string; // Español, Inglés, etc.
 
-  @Column({ type: 'varchar', length: 300, nullable: true })
-  segmentation?: string; 
+
+  @Column({ type: 'json', nullable: true })
+  segmentation?: SegmentationDto;
 
   @Column({
     type: 'enum',

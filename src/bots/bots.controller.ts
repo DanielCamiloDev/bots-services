@@ -14,6 +14,8 @@ import {
 import { BotsService } from './bots.service';
 import { CreateBotDto } from './dto/create-bot.dto';
 import { UpdateBotDto } from './dto/update-bot.dto';
+import { SegmentationDto } from './dto/segmentation.dto';
+
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
@@ -35,17 +37,17 @@ export class BotsController {
     return this.botsService.findAll();
   }
 
-/** 
+
   @Get('solo-bot-trainer')
   @Roles('bot-trainer::super-admin')
   ejemploSoloBotTrainer(@Req() req) {
     return {
       mensaje: '¡Acceso permitido solo para bot-trainer::super-admin!',
-      usuario: req.userName,
+      usuario: [req.userName, req.rrhh],
       roles: req.roles
     };
   }
-*/
+
 
 
   /**
@@ -55,13 +57,13 @@ export class BotsController {
   @Get('segment/:segmentationId')
   @Roles('bot-trainer::super-admin')
   async findAllBySegmentation(
-    @Param('segmentationId') segmentationId: string) {
+    @Param('segmentationId') segmentationId: number) {
     return this.botsService.findAllSegmentation(segmentationId);
   }
 
   // Endpoint para obtener un bot por su ID (solo para admin)
   @Get(':id')
-  @Roles('bot-trainer::admin')
+  @Roles('bot-trainer::admin', 'bot-trainer::super-admin')
   findOne(@Param('id') id: string) {
     return this.botsService.findOne(id);
   }
@@ -75,21 +77,21 @@ export class BotsController {
     @UploadedFile() image: any,
     @Req() req
   ) {
-    return this.botsService.create(body, req.userName, image);
+    return this.botsService.create(body, req.userName, req.rrhh, image);
   }
 
   // Endpoint para actualizar un bot existente (solo para super-admin y admin)
   @Put(':id')
   @Roles('bot-trainer::super-admin', 'bot-trainer::admin')
   update(@Param('id') id: string, @Body() payload: UpdateBotDto, @Req() req) {
-    return this.botsService.update(id, payload, req.userName);
+    return this.botsService.update(id, payload, req.userName, req.rrhh);
   }
 
   // Endpoint para eliminar un bot por su ID (solo para super-admin)
   @Delete(':id')
   @Roles('bot-trainer::super-admin')
   remove(@Param('id') id: string,@Req() req) {
-    return this.botsService.remove(id, req.userName);
+    return this.botsService.remove(id, req.userName, req.rrhh);
   }
 
 

@@ -21,6 +21,7 @@ export class JwtAuthGuard implements CanActivate {
       (request as any).userName = decoded.rrhh.name;
       (request as any).userRoles = decoded.rolesId || {};
       (request as any).roles = decoded.roles || [];
+      (request as any).rrhh = decoded.rrhh_id;
       return true;
     } catch (e) {
       throw new UnauthorizedException('Token inválido');

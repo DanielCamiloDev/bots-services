@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 import { Bot } from './bots.entity';
 import { CreateBotDto } from './dto/create-bot.dto';
 import { UpdateBotDto } from './dto/update-bot.dto';
+import { SegmentationDto } from './dto/segmentation.dto';
+
 import { BotAuditAction, BotAuditLog } from './bot-audit.entity';
 import {UserContextDto} from './dto/user-context.dto';
 import * as fs from 'fs';
@@ -32,20 +34,35 @@ export class BotsService {
    * Devuelve todos los bots de una segmentación dada.
    * @param segmentation id de la segmentación
    */
-  async findAllSegmentation(segmentation: string): Promise<Bot[]> {
-    const bots = await this.repo.find({ where: { segmentation } });
+  async findAllSegmentation(segmentation: number): Promise<Bot[]> {
+    const bots = await this.repo
+      .createQueryBuilder('bot')
+      .where("JSON_EXTRACT(bot.segmentation, '$.group') = :group", {
+        group: segmentation,
+      })
+      .getMany();
+
     if (bots.length === 0) {
       throw new NotFoundException(
-        `No se encontraron bots para la segmentación ${segmentation}`,
+        `No existe ningún bot en el grupo ${segmentation}`,
       );
     }
     return bots;
   }
-  async create(dto: CreateBotDto, user:string, image?: any) {
+
+
+
+  async create(dto: CreateBotDto, user:string, rrhh:number, image?: any) {
     this.logger.log('Creando un bot...'); // nivel info
 
     // 1. Verificar existencia por nombre
-    const exists = await this.repo.findOne({ where: { name: dto.name, segmentation: dto.segmentation } });
+    const exists = await this.repo
+    .createQueryBuilder('bot')
+    .where('bot.name = :name', { name: dto.name })
+    .andWhere("JSON_EXTRACT(bot.segmentation, '$.group') = :group", {
+      group: dto.segmentation.group,
+    })
+    .getOne();
     if (exists) {
       throw new ConflictException(`El nombre "${dto.name}" ya existe para la segmentación "${dto.segmentation}".`);
     }
@@ -73,13 +90,14 @@ export class BotsService {
       ...dto,
       closingKeywords,
       avatarUrl, // Guardar la ruta en el campo correcto
+      segmentation: dto.segmentation, // ← sin serializar
     });
     const savedBot = await this.repo.save(bot);
 
     await this.auditRepo.save({
       bot: savedBot,
       bot_id: savedBot.id,
-      user: user,
+      user: JSON.stringify({user, rrhh}),
       action: BotAuditAction.CREATE,
       details: { ...dto },
     });
@@ -87,24 +105,28 @@ export class BotsService {
     return savedBot;
   }
 
-  async update(id: string, dto: UpdateBotDto, user:string) {
-    await this.repo.update(id, dto).then(() => this.findOne(id));
+  async update(id: string, dto: UpdateBotDto, user:string, rrhh:number) {
+    const updatePayload: any = { ...dto };
+    if (dto.segmentation) {
+      updatePayload.segmentation = dto.segmentation; // ← sin serializar
+    }
+    await this.repo.update(id, updatePayload);
     const bot = await this.findOne(id);
     await this.auditRepo.save({
       bot,
       bot_id: bot.id,
-      user: user,
+      user: JSON.stringify({user, rrhh}),
       action: BotAuditAction.UPDATE,
       details: { ...dto },
     });
     return bot;
   }
-  async remove(id: string, user:string) {
+  async remove(id: string, user:string, rrhh:number) {
     const bot = await this.findOne(id);
     await this.auditRepo.save({
       bot,
       bot_id: bot.id,
-      user: user,
+      user: JSON.stringify({user, rrhh}),
       action: BotAuditAction.REMOVE,
       details: { info: "bot removed" }, // o details: null
     });
