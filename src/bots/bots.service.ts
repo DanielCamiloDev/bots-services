@@ -94,7 +94,6 @@ export class BotsService {
   }
   async remove(id: string, user:string) {
     const bot = await this.findOne(id);
-    await this.repo.delete(id);
     await this.auditRepo.save({
       bot,
       bot_id: bot.id,
@@ -102,6 +101,8 @@ export class BotsService {
       action: BotAuditAction.REMOVE,
       details: { info: "bot removed" }, // o details: null
     });
-    return bot;
+    await this.repo.delete(id);
+
+    return`bot con id ${id} eliminado`;
   }
 }
